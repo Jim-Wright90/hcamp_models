@@ -1,5 +1,5 @@
 ---
-title: "K-Nearest Neighbor"
+title: "Support Vector Machine"
 output:
   html_document:
     toc: true
@@ -46,7 +46,8 @@ library(future)
 library(rio)
 library(bit64)
 library(rpart.plot)
-library(kknn)
+library("e1071")
+library(GGally)
 
 
 theme_set(theme_minimal(15) +
@@ -106,6 +107,7 @@ mod_datav2 <- mod_datav2 %>%
   mutate_if(is.numeric, round, digits = 3)
 
 str(mod_datav2)
+
 ```
 
 ```{r, include=FALSE}
@@ -221,232 +223,177 @@ mod_datav2 %>%
 
 ```{r split, include=FALSE}
 
-mod_data3 <- mod_data_2 %>% 
-  select(student_id, gender, age_group, test_1_pcss_group, rtl_group)
+svm_data <- mod_data_2 %>% 
+  select(gender, age_group, test_1_pcss_group, rtl_group)
 
-str(mod_data3)
+str(svm_data)
 
 # data where rtl_group is split into two levels only 
 
-mod_data4 <- mod_datav2 %>% 
-  select(student_id, gender, age_group, test_1_pcss_group, rtl_group)
+svm_data2 <- mod_datav2 %>% 
+  select(gender, age_group, test_1_pcss_group, rtl_group)
 
-str(mod_data3)
-str(mod_data4)
-
-# split data 
-set.seed(3)
-data_split <- initial_split(mod_data3, strata = rtl_group)
-
-
-
-set.seed(3)
-train <- training(data_split)
-test <- testing(data_split)
-
-str(train)
-str(test)
-
-set.seed(3)
-data_cv <- vfold_cv(train)
-
-
-# split data - with two leveled RTL group
-set.seed(3)
-data_split2 <- initial_split(mod_data4, strata = rtl_group)
-
-
-
-set.seed(3)
-train2 <- training(data_split2)
-test2 <- testing(data_split2)
-
-str(train2)
-str(test2)
-
-set.seed(3)
-data_cv2 <- vfold_cv(train2)
+str(svm_data2)
 
 ```
 
-```{r, include=FALSE}
-knn_rec <- recipe(rtl_group ~ ., data = train) %>% 
-  update_role(contains("id"), new_role = "id vars") %>% 
-  step_novel(all_predictors()) %>%
-  step_unknown(all_predictors()) %>%
-  step_dummy(all_predictors(), -has_role("id vars")) %>% 
-  step_nzv(all_predictors()) %>% 
-  step_impute_knn(all_predictors())
-
-knn_rec_v2 <- recipe(rtl_group ~ ., data = train2) %>% 
-  update_role(contains("id"), new_role = "id vars") %>% 
-  step_novel(all_predictors()) %>%
-  step_unknown(all_predictors()) %>%
-  step_dummy(all_predictors(), -has_role("id vars")) %>% 
-  step_nzv(all_predictors()) %>% 
-  step_impute_knn(all_predictors())
-
-```
 
 ## Model with Five RTL Group Levels {.tabset .tabset-fade .tabset-pills}
 
 
 ```{r, include=FALSE}
-knn1_mod <- nearest_neighbor() %>%
-  set_engine("kknn") %>% 
-  set_mode("classification")
+# other SVM example code 
+
+set.seed(3)
+svm_split <- initial_split(svm_data, strata = rtl_group)
 
 
-translate(knn1_mod)
+set.seed(3)
+svm_train <- training(svm_split)
+svm_test <- testing(svm_split)
 
-knn1_mod <- knn1_mod %>%
-  set_args(neighbors = tune(),
-  weight_func = tune(),
-  dist_power = tune())
+svm_model <- svm(rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_train,
+              kernel = "radial")
 
-translate(knn1_mod)
-```
-
-
-```{r, include=FALSE}
-parallel::detectCores()
-
-tictoc::tic()
-cl <- parallel::makeCluster(8)
-
-doParallel::registerDoParallel(cl)
-
-knn1_res <- tune::tune_grid(
-  knn1_mod,
-  preprocessor = knn_rec,
-  resamples = data_cv,
-  control = tune::control_resamples(save_pred = TRUE)
-)
-
-parallel::stopCluster(cl)
-tictoc::toc()
+svm_model
 
 ```
 
-### Initial Predictions
+### Initial Model Results
 
 ```{r, include=TRUE}
-knn1_res %>%
-  select(.predictions) %>%
-  unnest()
-
-knn1_res %>% 
-  collect_predictions()
+table(Prediction = predict(svm_model, svm_train), Actual = svm_train$rtl_group)
 ```
 
-### Initial Model Metrics
+### Tuned Model Accuracy 
 
-The model generated a best roc_auc value of 0.542 with a value of *K* = 11
-
-```{r, include=FALSE}
-knn1_res %>% 
-  collect_metrics(summarize = FALSE)
-```
+Tuning the model generates an accuracy of 0.606
 
 ```{r, include=FALSE}
-knn1_res %>%
-  collect_metrics(summarize = FALSE) %>%
-  distinct(neighbors, weight_func, dist_power)
-
-knn1_res %>%
-  show_best(metric = "roc_auc", n = 1)
+tuned.svm <- tune.svm(rtl_group ~ gender + age_group + test_1_pcss_group,
+                      data = svm_train, kernel = "radial",
+        gamma = seq(1/2^nrow(svm_data),1, .01), cost = 2^seq(-6, 4, 2))
 ```
 
 ```{r, include=TRUE}
-knn1_res %>%
-  show_best(metric = "roc_auc", n = 10)
+tuned.svm
 ```
 
-### ROC-AUC/Weight Function Plot
+### Best Model Parameters 
 
 ```{r, include=FALSE}
-knn1_res %>% 
-  select_best(metric = "roc_auc")
+best.svm <- best.svm(rtl_group ~ gender + age_group + test_1_pcss_group,
+                     data = svm_train, kernel = "radial")
+
 ```
 
 ```{r, include=TRUE}
-knn1_res %>%
-  autoplot(metric = "roc_auc") +
-  geom_line()
+best.svm
 ```
 
-
-```{r, include=FALSE}
-#new model with grid
-# knn2_mod <- nearest_neighbor() %>%
-#   set_engine("kknn") %>%
-#   set_mode("classification") %>%
-#   set_args(neighbors = tune(),
-#            weight_func = tune())
-```
-
-```{r, include=FALSE}
-# knn_params <- parameters(neighbors(), dist_power())
-# 
-# knn_sfd <- grid_max_entropy(knn_params, size = 50)
-# 
-# knn2_res <- tune::tune_grid(
-#   knn2_mod,
-#   preprocessor = knn_rec,
-#   resamples = data_cv,
-#   grid = knn_sfd,
-#   control = tune::control_resamples(save_pred = TRUE))
-
-```
-
-### Final Model Metrics
-
-```{r, include=FALSE}
-knn_best <- knn1_res %>% 
-  select_best(metric = "roc_auc")
-
-knn_mod_final <- knn1_mod %>% 
-  finalize_model(knn_best)
-
-knn_rec_final <- knn_rec %>% 
-  finalize_recipe(knn_best)
-
-```
-
-```{r, include=FALSE}
-# final fit
-cl <- makeCluster(8)
-
-registerDoParallel(cl)
-
-knn_final_res <- last_fit(
-  knn_mod_final,
-  preprocessor = knn_rec_final,
-  split = data_split)
-
-stopCluster(cl)
-```
-
-After fitting the model, the roc_auc increases to 0.568 with low accuracy 
+### Best Model Predictions
 
 ```{r, include=TRUE}
-knn_final_res %>% 
-  collect_metrics()
+best.svm.pred <- predict(best.svm, svm_test)
+table(Prediction = best.svm.pred, Actual = svm_test$rtl_group)
 ```
 
-### Final Predictions 
+### Best Model Accuracy 
+
+The generated accuracy does not seem realistic or accurate. 
+
+```{r, include=TRUE}
+sum(svm_test$rtl_group == best.svm.pred)/50
+```
+
+## Model with Five RTL Group Levels (Alternative Code) {.tabset .tabset-fade .tabset-pills}
 
 ```{r, include=FALSE}
-knn_final_res %>% 
-  collect_predictions()
+svm_modelb <- svm(rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_data,
+              kernel = "radial")
+```
+
+
+```{r, include=FALSE}
+ggpairs(svm_data, ggplot2::aes(colour = rtl_group, alpha = 0.4))
+```
+
+
+```{r, include=FALSE}
+pred = predict(svm_modelb, svm_data)
+
+tab = table(Predicted=pred, Actual = svm_data$rtl_group)
+
+
+1-sum(diag(tab)/sum(tab))
+```
+
+### Model Predictions
+
+```{r, include=TRUE}
+tab
+```
+
+### Model Accuracy
+
+This code generates an accuracy of 0.624
+
+```{r, include=TRUE}
+1-sum(diag(tab)/sum(tab))
+```
+
+### Parameter Tuning Plot
+
+```{r, include=FALSE}
+set.seed(123)
+tmodel = tune(svm, rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_data,
+     ranges=list(epsilon= seq(0,1,0.1), cost = 2^(2:7)))
+
 ```
 
 ```{r, include=TRUE}
-knn_final_res %>% 
-  collect_predictions() %>% 
-  conf_mat(truth = rtl_group, estimate = .pred_class)
-
+plot(tmodel)
 ```
+
+### Parameter Tuning Summary 
+
+```{r, include=TRUE}
+summary(tmodel)
+```
+
+### Summary of Best Model
+
+```{r, include=TRUE}
+mymodel=tmodel$best.model
+summary(mymodel)
+```
+
+### Final Prediction Table
+
+```{r, include=FALSE}
+pred1 = predict(mymodel, svm_data)
+tab1 = table(Predicted=pred1, Actual = svm_data$rtl_group)
+```
+
+```{r, include=TRUE}
+tab1
+```
+
+### Final Prediction Accuracy
+
+The model generates an accuracy of 0.587
+
+```{r, include=TRUE}
+1-sum(diag(tab1)/sum(tab1))
+```
+
+
+
+
+
 
 
 
@@ -454,160 +401,150 @@ knn_final_res %>%
 
 
 ```{r, include=FALSE}
-knn_mod2 <- nearest_neighbor() %>%
-  set_engine("kknn") %>% 
-  set_mode("classification")
+# other SVM example code 
+
+set.seed(3)
+svm_split2 <- initial_split(svm_data2, strata = rtl_group)
 
 
-translate(knn_mod2)
+set.seed(3)
+svm_train2 <- training(svm_split2)
+svm_test2 <- testing(svm_split2)
 
-knn_mod2 <- knn_mod2 %>%
-  set_args(neighbors = tune(),
-  weight_func = tune(),
-  dist_power = tune())
+svm_model2 <- svm(rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_train2,
+              kernel = "radial")
 
-translate(knn_mod2)
-```
-
-
-```{r, include=FALSE}
-parallel::detectCores()
-
-tictoc::tic()
-cl <- parallel::makeCluster(8)
-
-doParallel::registerDoParallel(cl)
-
-knn_res2 <- tune::tune_grid(
-  knn_mod2,
-  preprocessor = knn_rec_v2,
-  resamples = data_cv2,
-  control = tune::control_resamples(save_pred = TRUE)
-)
-
-parallel::stopCluster(cl)
-tictoc::toc()
+svm_model2
 
 ```
 
-### Initial Predictions
+### Initial Model Results
 
 ```{r, include=TRUE}
-knn_res2 %>%
-  select(.predictions) %>%
-  unnest()
-
-knn_res2 %>% 
-  collect_predictions()
+table(Prediction = predict(svm_model2, svm_train2), Actual = svm_train2$rtl_group)
 ```
 
-### Initial Model Metrics
+### Tuned Model Accuracy 
 
-The model generated a best roc_auc value of 0.514 with a value of *K* = 4
-
-```{r, include=FALSE}
-knn_res2 %>% 
-  collect_metrics(summarize = FALSE)
-```
+Tuning the model generates an accuracy of 0.398
 
 ```{r, include=FALSE}
-knn_res2 %>%
-  collect_metrics(summarize = FALSE) %>%
-  distinct(neighbors, weight_func, dist_power)
-
-knn_res2 %>%
-  show_best(metric = "roc_auc", n = 1)
+tuned.svm2 <- tune.svm(rtl_group ~ gender + age_group + test_1_pcss_group,
+                      data = svm_train2, kernel = "radial",
+        gamma = seq(1/2^nrow(svm_data2),1, .01), cost = 2^seq(-6, 4, 2))
 ```
 
 ```{r, include=TRUE}
-knn_res2 %>%
-  show_best(metric = "roc_auc", n = 10)
+tuned.svm2
 ```
 
-### ROC-AUC/Weight Function Plot
+### Best Model Parameters 
 
 ```{r, include=FALSE}
-knn_res2 %>% 
-  select_best(metric = "roc_auc")
+best.svm2 <- best.svm(rtl_group ~ gender + age_group + test_1_pcss_group,
+                     data = svm_train2, kernel = "radial")
+
 ```
 
 ```{r, include=TRUE}
-knn_res2 %>%
-  autoplot(metric = "roc_auc") +
-  geom_line()
+best.svm2
 ```
 
-
-```{r, include=FALSE}
-#new model with grid
-# knn2_mod <- nearest_neighbor() %>%
-#   set_engine("kknn") %>%
-#   set_mode("classification") %>%
-#   set_args(neighbors = tune(),
-#            weight_func = tune())
-```
-
-```{r, include=FALSE}
-# knn_params <- parameters(neighbors(), dist_power())
-# 
-# knn_sfd <- grid_max_entropy(knn_params, size = 50)
-# 
-# knn2_res <- tune::tune_grid(
-#   knn2_mod,
-#   preprocessor = knn_rec,
-#   resamples = data_cv,
-#   grid = knn_sfd,
-#   control = tune::control_resamples(save_pred = TRUE))
-
-```
-
-### Final Model Metrics
-
-```{r, include=FALSE}
-knn_best2 <- knn_res2 %>% 
-  select_best(metric = "roc_auc")
-
-knn_mod_final2 <- knn_mod2 %>% 
-  finalize_model(knn_best2)
-
-knn_rec_final2 <- knn_rec_v2 %>% 
-  finalize_recipe(knn_best2)
-
-```
-
-```{r, include=FALSE}
-# final fit
-cl <- makeCluster(8)
-
-registerDoParallel(cl)
-
-knn_final_res2 <- last_fit(
-  knn_mod_final2,
-  preprocessor = knn_rec_final2,
-  split = data_split2)
-
-stopCluster(cl)
-```
-
-After fitting the model, the roc_auc increases to 0.525 but much more accurate than 5-leveled model.
+### Best Model Predictions
 
 ```{r, include=TRUE}
-knn_final_res2 %>% 
-  collect_metrics()
+best.svm.pred2 <- predict(best.svm2, svm_test2)
+table(Prediction = best.svm.pred2, Actual = svm_test2$rtl_group)
 ```
 
-### Final Predictions 
+### Best Model Accuracy 
 
-```{r, include=FALSE}
-knn_final_res2 %>% 
-  collect_predictions()
-```
-
+The generated accuracy does not seem realistic or accurate. 
 
 ```{r, include=TRUE}
-knn_final_res2 %>% 
-  collect_predictions() %>% 
-  conf_mat(truth = rtl_group, estimate = .pred_class)
+sum(svm_test2$rtl_group == best.svm.pred2)/50
+```
+
+## Model with Two RTL Group Levels (Alternative Code) {.tabset .tabset-fade .tabset-pills}
+
+```{r, include=FALSE}
+svm_model2b <- svm(rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_data2,
+              kernel = "radial")
+```
+
+
+```{r, include=FALSE}
+ggplotly(ggpairs(svm_data2, ggplot2::aes(colour = rtl_group, alpha = 0.4)))
+```
+
+
+```{r, include=FALSE}
+pred2 = predict(svm_model2b, svm_data2)
+
+tab2 = table(Predicted=pred2, Actual = svm_data2$rtl_group)
+
+
+1-sum(diag(tab2)/sum(tab2))
+```
+
+### Model Predictions
+
+```{r, include=TRUE}
+tab2
+```
+
+### Model Accuracy
+
+This code generates an accuracy of 0.405
+
+```{r, include=TRUE}
+1-sum(diag(tab2)/sum(tab2))
+```
+
+### Parameter Tuning Plot
+
+```{r, include=FALSE}
+set.seed(123)
+tmodel2 = tune(svm, rtl_group ~ gender + age_group + test_1_pcss_group, 
+              data = svm_data2,
+     ranges=list(epsilon= seq(0,1,0.1), cost = 2^(2:7)))
 
 ```
 
+```{r, include=TRUE}
+plot(tmodel2)
+```
+
+### Parameter Tuning Summary 
+
+```{r, include=TRUE}
+summary(tmodel2)
+```
+
+### Summary of Best Model
+
+```{r, include=TRUE}
+mymodel2=tmodel2$best.model
+summary(mymodel2)
+```
+
+### Final Prediction Table
+
+```{r, include=FALSE}
+pred1b = predict(mymodel2, svm_data2)
+tab1b = table(Predicted=pred1b, Actual = svm_data2$rtl_group)
+```
+
+```{r, include=TRUE}
+tab1b
+```
+
+### Final Prediction Accuracy
+
+The model generates an accuracy of 0.381
+
+```{r, include=TRUE}
+1-sum(diag(tab1b)/sum(tab1b))
+```

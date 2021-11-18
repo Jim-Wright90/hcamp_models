@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Support Vector Machine</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/htmlwidgets-1.5.3/htmlwidgets.js"></script>
+<script src="site_libs/plotly-binding-4.9.4.1/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/crosstalk-1.1.1/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.1.1/js/crosstalk.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-1.57.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-1.57.1/plotly-latest.min.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+
+
+
+<link rel="stylesheet" href="website-custom.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">HCAMP Predictive Models</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="decision_tree.html">Decision Tree</a>
+</li>
+<li>
+  <a href="random_forest.html">Random Forest</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="knn.html">K-Nearest Neighbor</a>
+</li>
+<li>
+  <a href="svm.html">Support Vector Machine</a>
+</li>
+<li>
+  <a href="https://github.com/Jim-Wright90/hcamp_models.git">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Support Vector Machine</h1>
+
+</div>
+
+
+<div id="model-with-five-rtl-group-levels" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Model with Five RTL Group Levels</h2>
+<div id="initial-model-results" class="section level3">
+<h3>Initial Model Results</h3>
+<pre><code>##           Actual
+## Prediction 0-6 13-18 19-24 25-30 7-12
+##      0-6     0     0     0     0    0
+##      13-18   2    16     6     4    8
+##      19-24   0     0     4     0    0
+##      25-30   0     0     0     0    0
+##      7-12   99   119    74    28  204</code></pre>
+</div>
+<div id="tuned-model-accuracy" class="section level3">
+<h3>Tuned Model Accuracy</h3>
+<p>Tuning the model generates an accuracy of 0.606</p>
+<pre><code>## 
+## Parameter tuning of &#39;svm&#39;:
+## 
+## - sampling method: 10-fold cross validation 
+## 
+## - best parameters:
+##  gamma cost
+##    0.1    4
+## 
+## - best performance: 0.5939223</code></pre>
+</div>
+<div id="best-model-parameters" class="section level3">
+<h3>Best Model Parameters</h3>
+<pre><code>## 
+## Call:
+## best.svm(x = rtl_group ~ gender + age_group + test_1_pcss_group, 
+##     data = svm_train, kernel = &quot;radial&quot;)
+## 
+## 
+## Parameters:
+##    SVM-Type:  C-classification 
+##  SVM-Kernel:  radial 
+##        cost:  1 
+## 
+## Number of Support Vectors:  508</code></pre>
+</div>
+<div id="best-model-predictions" class="section level3">
+<h3>Best Model Predictions</h3>
+<pre><code>##           Actual
+## Prediction 0-6 13-18 19-24 25-30 7-12
+##      0-6     0     0     0     0    0
+##      13-18   0     1     1     1    0
+##      19-24   0     2     0     0    0
+##      25-30   0     0     0     0    0
+##      7-12   36    44    29     5   72</code></pre>
+</div>
+<div id="best-model-accuracy" class="section level3">
+<h3>Best Model Accuracy</h3>
+<p>The generated accuracy does not seem realistic or accurate.</p>
+<pre><code>## [1] 1.46</code></pre>
+</div>
+</div>
+<div id="model-with-five-rtl-group-levels-alternative-code" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Model with Five RTL Group Levels (Alternative Code)</h2>
+<div id="model-predictions" class="section level3">
+<h3>Model Predictions</h3>
+<pre><code>##          Actual
+## Predicted 0-6 13-18 19-24 25-30 7-12
+##     0-6     0     0     0     0    0
+##     13-18   0     0     0     0    0
+##     19-24   0     0     0     0    0
+##     25-30   0     0     0     0    0
+##     7-12  137   182   114    38  284</code></pre>
+</div>
+<div id="model-accuracy" class="section level3">
+<h3>Model Accuracy</h3>
+<p>This code generates an accuracy of 0.624</p>
+<pre><code>## [1] 0.6238411</code></pre>
+</div>
+<div id="parameter-tuning-plot" class="section level3">
+<h3>Parameter Tuning Plot</h3>
+<p><img src="svm_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="parameter-tuning-summary" class="section level3">
+<h3>Parameter Tuning Summary</h3>
+<pre><code>## 
+## Parameter tuning of &#39;svm&#39;:
+## 
+## - sampling method: 10-fold cross validation 
+## 
+## - best parameters:
+##  epsilon cost
+##        0    8
+## 
+## - best performance: 0.5974561 
+## 
+## - Detailed performance results:
+##    epsilon cost     error dispersion
+## 1      0.0    4 0.6027544 0.06766287
+## 2      0.1    4 0.6027544 0.06766287
+## 3      0.2    4 0.6027544 0.06766287
+## 4      0.3    4 0.6027544 0.06766287
+## 5      0.4    4 0.6027544 0.06766287
+## 6      0.5    4 0.6027544 0.06766287
+## 7      0.6    4 0.6027544 0.06766287
+## 8      0.7    4 0.6027544 0.06766287
+## 9      0.8    4 0.6027544 0.06766287
+## 10     0.9    4 0.6027544 0.06766287
+## 11     1.0    4 0.6027544 0.06766287
+## 12     0.0    8 0.5974561 0.07000106
+## 13     0.1    8 0.5974561 0.07000106
+## 14     0.2    8 0.5974561 0.07000106
+## 15     0.3    8 0.5974561 0.07000106
+## 16     0.4    8 0.5974561 0.07000106
+## 17     0.5    8 0.5974561 0.07000106
+## 18     0.6    8 0.5974561 0.07000106
+## 19     0.7    8 0.5974561 0.07000106
+## 20     0.8    8 0.5974561 0.07000106
+## 21     0.9    8 0.5974561 0.07000106
+## 22     1.0    8 0.5974561 0.07000106
+## 23     0.0   16 0.5974561 0.07000106
+## 24     0.1   16 0.5974561 0.07000106
+## 25     0.2   16 0.5974561 0.07000106
+## 26     0.3   16 0.5974561 0.07000106
+## 27     0.4   16 0.5974561 0.07000106
+## 28     0.5   16 0.5974561 0.07000106
+## 29     0.6   16 0.5974561 0.07000106
+## 30     0.7   16 0.5974561 0.07000106
+## 31     0.8   16 0.5974561 0.07000106
+## 32     0.9   16 0.5974561 0.07000106
+## 33     1.0   16 0.5974561 0.07000106
+## 34     0.0   32 0.6014386 0.07278956
+## 35     0.1   32 0.6014386 0.07278956
+## 36     0.2   32 0.6014386 0.07278956
+## 37     0.3   32 0.6014386 0.07278956
+## 38     0.4   32 0.6014386 0.07278956
+## 39     0.5   32 0.6014386 0.07278956
+## 40     0.6   32 0.6014386 0.07278956
+## 41     0.7   32 0.6014386 0.07278956
+## 42     0.8   32 0.6014386 0.07278956
+## 43     0.9   32 0.6014386 0.07278956
+## 44     1.0   32 0.6014386 0.07278956
+## 45     0.0   64 0.6067719 0.07353699
+## 46     0.1   64 0.6067719 0.07353699
+## 47     0.2   64 0.6067719 0.07353699
+## 48     0.3   64 0.6067719 0.07353699
+## 49     0.4   64 0.6067719 0.07353699
+## 50     0.5   64 0.6067719 0.07353699
+## 51     0.6   64 0.6067719 0.07353699
+## 52     0.7   64 0.6067719 0.07353699
+## 53     0.8   64 0.6067719 0.07353699
+## 54     0.9   64 0.6067719 0.07353699
+## 55     1.0   64 0.6067719 0.07353699
+## 56     0.0  128 0.6067719 0.07353699
+## 57     0.1  128 0.6067719 0.07353699
+## 58     0.2  128 0.6067719 0.07353699
+## 59     0.3  128 0.6067719 0.07353699
+## 60     0.4  128 0.6067719 0.07353699
+## 61     0.5  128 0.6067719 0.07353699
+## 62     0.6  128 0.6067719 0.07353699
+## 63     0.7  128 0.6067719 0.07353699
+## 64     0.8  128 0.6067719 0.07353699
+## 65     0.9  128 0.6067719 0.07353699
+## 66     1.0  128 0.6067719 0.07353699</code></pre>
+</div>
+<div id="summary-of-best-model" class="section level3">
+<h3>Summary of Best Model</h3>
+<pre><code>## 
+## Call:
+## best.tune(method = svm, train.x = rtl_group ~ gender + age_group + 
+##     test_1_pcss_group, data = svm_data, ranges = list(epsilon = seq(0, 
+##     1, 0.1), cost = 2^(2:7)))
+## 
+## 
+## Parameters:
+##    SVM-Type:  C-classification 
+##  SVM-Kernel:  radial 
+##        cost:  8 
+## 
+## Number of Support Vectors:  661
+## 
+##  ( 200 137 176 110 38 )
+## 
+## 
+## Number of Classes:  5 
+## 
+## Levels: 
+##  0-6 13-18 19-24 25-30 7-12</code></pre>
+</div>
+<div id="final-prediction-table" class="section level3">
+<h3>Final Prediction Table</h3>
+<pre><code>##          Actual
+## Predicted 0-6 13-18 19-24 25-30 7-12
+##     0-6     0     0     0     0    0
+##     13-18   2    15     1     5    5
+##     19-24   0    13    22     0    4
+##     25-30   0     0     0     0    0
+##     7-12  135   154    91    33  275</code></pre>
+</div>
+<div id="final-prediction-accuracy" class="section level3">
+<h3>Final Prediction Accuracy</h3>
+<p>The model generates an accuracy of 0.587</p>
+<pre><code>## [1] 0.586755</code></pre>
+</div>
+</div>
+<div id="model-with-two-rtl-group-levels" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Model with Two RTL Group Levels</h2>
+<div id="initial-model-results-1" class="section level3">
+<h3>Initial Model Results</h3>
+<pre><code>##           Actual
+## Prediction 0-12 13-30
+##      0-12   295   208
+##      13-30   20    42</code></pre>
+</div>
+<div id="tuned-model-accuracy-1" class="section level3">
+<h3>Tuned Model Accuracy</h3>
+<p>Tuning the model generates an accuracy of 0.398</p>
+<pre><code>## 
+## Parameter tuning of &#39;svm&#39;:
+## 
+## - sampling method: 10-fold cross validation 
+## 
+## - best parameters:
+##  gamma cost
+##   0.16    1
+## 
+## - best performance: 0.3966479</code></pre>
+</div>
+<div id="best-model-parameters-1" class="section level3">
+<h3>Best Model Parameters</h3>
+<pre><code>## 
+## Call:
+## best.svm(x = rtl_group ~ gender + age_group + test_1_pcss_group, 
+##     data = svm_train2, kernel = &quot;radial&quot;)
+## 
+## 
+## Parameters:
+##    SVM-Type:  C-classification 
+##  SVM-Kernel:  radial 
+##        cost:  1 
+## 
+## Number of Support Vectors:  496</code></pre>
+</div>
+<div id="best-model-predictions-1" class="section level3">
+<h3>Best Model Predictions</h3>
+<pre><code>##           Actual
+## Prediction 0-12 13-30
+##      0-12    99    67
+##      13-30    7    17</code></pre>
+</div>
+<div id="best-model-accuracy-1" class="section level3">
+<h3>Best Model Accuracy</h3>
+<p>The generated accuracy does not seem realistic or accurate.</p>
+<pre><code>## [1] 2.32</code></pre>
+</div>
+</div>
+<div id="model-with-two-rtl-group-levels-alternative-code" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Model with Two RTL Group Levels (Alternative Code)</h2>
+<div id="model-predictions-1" class="section level3">
+<h3>Model Predictions</h3>
+<pre><code>##          Actual
+## Predicted 0-12 13-30
+##     0-12   394   279
+##     13-30   27    55</code></pre>
+</div>
+<div id="model-accuracy-1" class="section level3">
+<h3>Model Accuracy</h3>
+<p>This code generates an accuracy of 0.405</p>
+<pre><code>## [1] 0.405298</code></pre>
+</div>
+<div id="parameter-tuning-plot-1" class="section level3">
+<h3>Parameter Tuning Plot</h3>
+<p><img src="svm_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
+</div>
+<div id="parameter-tuning-summary-1" class="section level3">
+<h3>Parameter Tuning Summary</h3>
+<pre><code>## 
+## Parameter tuning of &#39;svm&#39;:
+## 
+## - sampling method: 10-fold cross validation 
+## 
+## - best parameters:
+##  epsilon cost
+##        0    4
+## 
+## - best performance: 0.3828596 
+## 
+## - Detailed performance results:
+##    epsilon cost     error dispersion
+## 1      0.0    4 0.3828596 0.06738665
+## 2      0.1    4 0.3828596 0.06738665
+## 3      0.2    4 0.3828596 0.06738665
+## 4      0.3    4 0.3828596 0.06738665
+## 5      0.4    4 0.3828596 0.06738665
+## 6      0.5    4 0.3828596 0.06738665
+## 7      0.6    4 0.3828596 0.06738665
+## 8      0.7    4 0.3828596 0.06738665
+## 9      0.8    4 0.3828596 0.06738665
+## 10     0.9    4 0.3828596 0.06738665
+## 11     1.0    4 0.3828596 0.06738665
+## 12     0.0    8 0.3895263 0.07238325
+## 13     0.1    8 0.3895263 0.07238325
+## 14     0.2    8 0.3895263 0.07238325
+## 15     0.3    8 0.3895263 0.07238325
+## 16     0.4    8 0.3895263 0.07238325
+## 17     0.5    8 0.3895263 0.07238325
+## 18     0.6    8 0.3895263 0.07238325
+## 19     0.7    8 0.3895263 0.07238325
+## 20     0.8    8 0.3895263 0.07238325
+## 21     0.9    8 0.3895263 0.07238325
+## 22     1.0    8 0.3895263 0.07238325
+## 23     0.0   16 0.3921579 0.07038696
+## 24     0.1   16 0.3921579 0.07038696
+## 25     0.2   16 0.3921579 0.07038696
+## 26     0.3   16 0.3921579 0.07038696
+## 27     0.4   16 0.3921579 0.07038696
+## 28     0.5   16 0.3921579 0.07038696
+## 29     0.6   16 0.3921579 0.07038696
+## 30     0.7   16 0.3921579 0.07038696
+## 31     0.8   16 0.3921579 0.07038696
+## 32     0.9   16 0.3921579 0.07038696
+## 33     1.0   16 0.3921579 0.07038696
+## 34     0.0   32 0.3921404 0.06858698
+## 35     0.1   32 0.3921404 0.06858698
+## 36     0.2   32 0.3921404 0.06858698
+## 37     0.3   32 0.3921404 0.06858698
+## 38     0.4   32 0.3921404 0.06858698
+## 39     0.5   32 0.3921404 0.06858698
+## 40     0.6   32 0.3921404 0.06858698
+## 41     0.7   32 0.3921404 0.06858698
+## 42     0.8   32 0.3921404 0.06858698
+## 43     0.9   32 0.3921404 0.06858698
+## 44     1.0   32 0.3921404 0.06858698
+## 45     0.0   64 0.3881754 0.06889098
+## 46     0.1   64 0.3881754 0.06889098
+## 47     0.2   64 0.3881754 0.06889098
+## 48     0.3   64 0.3881754 0.06889098
+## 49     0.4   64 0.3881754 0.06889098
+## 50     0.5   64 0.3881754 0.06889098
+## 51     0.6   64 0.3881754 0.06889098
+## 52     0.7   64 0.3881754 0.06889098
+## 53     0.8   64 0.3881754 0.06889098
+## 54     0.9   64 0.3881754 0.06889098
+## 55     1.0   64 0.3881754 0.06889098
+## 56     0.0  128 0.3881754 0.06889098
+## 57     0.1  128 0.3881754 0.06889098
+## 58     0.2  128 0.3881754 0.06889098
+## 59     0.3  128 0.3881754 0.06889098
+## 60     0.4  128 0.3881754 0.06889098
+## 61     0.5  128 0.3881754 0.06889098
+## 62     0.6  128 0.3881754 0.06889098
+## 63     0.7  128 0.3881754 0.06889098
+## 64     0.8  128 0.3881754 0.06889098
+## 65     0.9  128 0.3881754 0.06889098
+## 66     1.0  128 0.3881754 0.06889098</code></pre>
+</div>
+<div id="summary-of-best-model-1" class="section level3">
+<h3>Summary of Best Model</h3>
+<pre><code>## 
+## Call:
+## best.tune(method = svm, train.x = rtl_group ~ gender + age_group + 
+##     test_1_pcss_group, data = svm_data2, ranges = list(epsilon = seq(0, 
+##     1, 0.1), cost = 2^(2:7)))
+## 
+## 
+## Parameters:
+##    SVM-Type:  C-classification 
+##  SVM-Kernel:  radial 
+##        cost:  4 
+## 
+## Number of Support Vectors:  620
+## 
+##  ( 310 310 )
+## 
+## 
+## Number of Classes:  2 
+## 
+## Levels: 
+##  0-12 13-30</code></pre>
+</div>
+<div id="final-prediction-table-1" class="section level3">
+<h3>Final Prediction Table</h3>
+<pre><code>##          Actual
+## Predicted 0-12 13-30
+##     0-12   406   273
+##     13-30   15    61</code></pre>
+</div>
+<div id="final-prediction-accuracy-1" class="section level3">
+<h3>Final Prediction Accuracy</h3>
+<p>The model generates an accuracy of 0.381</p>
+<pre><code>## [1] 0.381457</code></pre>
+</div>
+</div>
+
+<p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">
+<img alt="Creative Commons License" style="border-width:0" src="by-nc.png" width="65"/></a>
+<link rel="stylesheet" href="website-custom.css" type="text/css" />
+</p>
+<script src="highlight-custom.js"></script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

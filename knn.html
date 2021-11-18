@@ -317,10 +317,10 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="visual_analysis.html">K-Nearest Neighbor</a>
+  <a href="knn.html">K-Nearest Neighbor</a>
 </li>
 <li>
-  <a href="mlm.html">Support Vector Machine</a>
+  <a href="svm.html">Support Vector Machine</a>
 </li>
 <li>
   <a href="https://github.com/Jim-Wright90/hcamp_models.git">
@@ -344,6 +344,150 @@ div.tocify {
 
 <div id="model-with-five-rtl-group-levels" class="section level2 tabset tabset-fade tabset-pills">
 <h2 class="tabset tabset-fade tabset-pills">Model with Five RTL Group Levels</h2>
+<div id="initial-predictions" class="section level3">
+<h3>Initial Predictions</h3>
+<pre><code>## # A tibble: 5,640 × 12
+##    `.pred_0-6` `.pred_13-18` `.pred_19-24` `.pred_25-30` `.pred_7-12`  .row neighbors
+##          &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt; &lt;int&gt;     &lt;int&gt;
+##  1         0.5           0.5             0           0              0    10         2
+##  2         1             0               0           0              0    23         2
+##  3         1             0               0           0              0    24         2
+##  4         1             0               0           0              0    26         2
+##  5         0.5           0.5             0           0              0    35         2
+##  6         1             0               0           0              0    37         2
+##  7         0             0.5             0           0.5            0    38         2
+##  8         1             0               0           0              0    40         2
+##  9         1             0               0           0              0    49         2
+## 10         1             0               0           0              0    58         2
+## # … with 5,630 more rows, and 5 more variables: weight_func &lt;chr&gt;, dist_power &lt;dbl&gt;,
+## #   .pred_class &lt;fct&gt;, rtl_group &lt;fct&gt;, .config &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 5,640 × 13
+##    id     `.pred_0-6` `.pred_13-18` `.pred_19-24` `.pred_25-30` `.pred_7-12`  .row neighbors
+##    &lt;chr&gt;        &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt; &lt;int&gt;     &lt;int&gt;
+##  1 Fold01         0.5           0.5             0           0              0    10         2
+##  2 Fold01         1             0               0           0              0    23         2
+##  3 Fold01         1             0               0           0              0    24         2
+##  4 Fold01         1             0               0           0              0    26         2
+##  5 Fold01         0.5           0.5             0           0              0    35         2
+##  6 Fold01         1             0               0           0              0    37         2
+##  7 Fold01         0             0.5             0           0.5            0    38         2
+##  8 Fold01         1             0               0           0              0    40         2
+##  9 Fold01         1             0               0           0              0    49         2
+## 10 Fold01         1             0               0           0              0    58         2
+## # … with 5,630 more rows, and 5 more variables: weight_func &lt;chr&gt;, dist_power &lt;dbl&gt;,
+## #   .pred_class &lt;fct&gt;, rtl_group &lt;fct&gt;, .config &lt;chr&gt;</code></pre>
+</div>
+<div id="initial-model-metrics" class="section level3">
+<h3>Initial Model Metrics</h3>
+<p>The model generated a best roc_auc value of 0.542 with a value of <em>K</em> = 11</p>
+<pre><code>## # A tibble: 10 × 9
+##    neighbors weight_func  dist_power .metric .estimator  mean     n std_err .config             
+##        &lt;int&gt; &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+##  1        11 cos               1.46  roc_auc hand_till  0.542    10 0.0136  Preprocessor1_Model…
+##  2        14 optimal           0.359 roc_auc hand_till  0.540    10 0.0123  Preprocessor1_Model…
+##  3        12 epanechnikov      0.222 roc_auc hand_till  0.540    10 0.0102  Preprocessor1_Model…
+##  4         8 triangular        1.11  roc_auc hand_till  0.536    10 0.0113  Preprocessor1_Model…
+##  5         8 triweight         1.73  roc_auc hand_till  0.535    10 0.0115  Preprocessor1_Model…
+##  6        13 rectangular       0.907 roc_auc hand_till  0.534    10 0.0102  Preprocessor1_Model…
+##  7         2 biweight          0.829 roc_auc hand_till  0.523    10 0.00456 Preprocessor1_Model…
+##  8         6 gaussian          1.39  roc_auc hand_till  0.519    10 0.00879 Preprocessor1_Model…
+##  9         3 inv               1.93  roc_auc hand_till  0.516    10 0.00541 Preprocessor1_Model…
+## 10         5 rank              0.521 roc_auc hand_till  0.516    10 0.00997 Preprocessor1_Model…</code></pre>
+</div>
+<div id="roc-aucweight-function-plot" class="section level3">
+<h3>ROC-AUC/Weight Function Plot</h3>
+<p><img src="knn_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+<div id="final-model-metrics" class="section level3">
+<h3>Final Model Metrics</h3>
+<p>After fitting the model, the roc_auc increases to 0.568 with low accuracy</p>
+<pre><code>## # A tibble: 2 × 4
+##   .metric  .estimator .estimate .config             
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
+## 1 accuracy multiclass     0.204 Preprocessor1_Model1
+## 2 roc_auc  hand_till      0.568 Preprocessor1_Model1</code></pre>
+</div>
+<div id="final-predictions" class="section level3">
+<h3>Final Predictions</h3>
+<pre><code>##           Truth
+## Prediction 0-6 13-18 19-24 25-30 7-12
+##      0-6    35    45    27     5   65
+##      13-18   0     2     3     1    5
+##      19-24   0     0     0     0    0
+##      25-30   0     0     0     0    0
+##      7-12    1     0     0     0    2</code></pre>
+</div>
+</div>
+<div id="model-with-two-rtl-group-levels" class="section level2 tabset tabset-fade tabset-pills">
+<h2 class="tabset tabset-fade tabset-pills">Model with Two RTL Group Levels</h2>
+<div id="initial-predictions-1" class="section level3">
+<h3>Initial Predictions</h3>
+<pre><code>## # A tibble: 5,650 × 9
+##    `.pred_0-12` `.pred_13-30`  .row neighbors weight_func dist_power .pred_class rtl_group
+##           &lt;dbl&gt;         &lt;dbl&gt; &lt;int&gt;     &lt;int&gt; &lt;chr&gt;            &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;    
+##  1            1             0    10        10 biweight          1.10 0-12        0-12     
+##  2            1             0    23        10 biweight          1.10 0-12        0-12     
+##  3            1             0    24        10 biweight          1.10 0-12        0-12     
+##  4            1             0    26        10 biweight          1.10 0-12        0-12     
+##  5            1             0    35        10 biweight          1.10 0-12        0-12     
+##  6            1             0    37        10 biweight          1.10 0-12        0-12     
+##  7            1             0    38        10 biweight          1.10 0-12        0-12     
+##  8            1             0    40        10 biweight          1.10 0-12        0-12     
+##  9            1             0    49        10 biweight          1.10 0-12        0-12     
+## 10            1             0    58        10 biweight          1.10 0-12        0-12     
+## # … with 5,640 more rows, and 1 more variable: .config &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 5,650 × 10
+##    id     `.pred_0-12` `.pred_13-30`  .row neighbors weight_func dist_power .pred_class rtl_group
+##    &lt;chr&gt;         &lt;dbl&gt;         &lt;dbl&gt; &lt;int&gt;     &lt;int&gt; &lt;chr&gt;            &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;    
+##  1 Fold01            1             0    10        10 biweight          1.10 0-12        0-12     
+##  2 Fold01            1             0    23        10 biweight          1.10 0-12        0-12     
+##  3 Fold01            1             0    24        10 biweight          1.10 0-12        0-12     
+##  4 Fold01            1             0    26        10 biweight          1.10 0-12        0-12     
+##  5 Fold01            1             0    35        10 biweight          1.10 0-12        0-12     
+##  6 Fold01            1             0    37        10 biweight          1.10 0-12        0-12     
+##  7 Fold01            1             0    38        10 biweight          1.10 0-12        0-12     
+##  8 Fold01            1             0    40        10 biweight          1.10 0-12        0-12     
+##  9 Fold01            1             0    49        10 biweight          1.10 0-12        0-12     
+## 10 Fold01            1             0    58        10 biweight          1.10 0-12        0-12     
+## # … with 5,640 more rows, and 1 more variable: .config &lt;chr&gt;</code></pre>
+</div>
+<div id="initial-model-metrics-1" class="section level3">
+<h3>Initial Model Metrics</h3>
+<p>The model generated a best roc_auc value of 0.514 with a value of <em>K</em> = 4</p>
+<pre><code>## # A tibble: 10 × 9
+##    neighbors weight_func  dist_power .metric .estimator  mean     n std_err .config             
+##        &lt;int&gt; &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+##  1         7 triangular        0.311 roc_auc binary     0.511    10 0.0131  Preprocessor1_Model…
+##  2         2 inv               1.87  roc_auc binary     0.511    10 0.00454 Preprocessor1_Model…
+##  3         8 optimal           0.144 roc_auc binary     0.511    10 0.0124  Preprocessor1_Model…
+##  4         9 epanechnikov      1.32  roc_auc binary     0.507    10 0.0125  Preprocessor1_Model…
+##  5        10 biweight          1.10  roc_auc binary     0.505    10 0.0127  Preprocessor1_Model…
+##  6         5 rank              0.532 roc_auc binary     0.504    10 0.0136  Preprocessor1_Model…
+##  7         3 rectangular       1.76  roc_auc binary     0.501    10 0.00604 Preprocessor1_Model…
+##  8        12 cos               1.03  roc_auc binary     0.498    10 0.0166  Preprocessor1_Model…
+##  9        14 gaussian          1.60  roc_auc binary     0.496    10 0.0171  Preprocessor1_Model…
+## 10        13 triweight         0.707 roc_auc binary     0.496    10 0.0169  Preprocessor1_Model…</code></pre>
+</div>
+<div id="roc-aucweight-function-plot-1" class="section level3">
+<h3>ROC-AUC/Weight Function Plot</h3>
+<p><img src="knn_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+</div>
+<div id="final-model-metrics-1" class="section level3">
+<h3>Final Model Metrics</h3>
+<p>After fitting the model, the roc_auc increases to 0.525 but much more accurate than 5-leveled model.</p>
+<pre><code>## # A tibble: 2 × 4
+##   .metric  .estimator .estimate .config             
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
+## 1 accuracy binary         0.584 Preprocessor1_Model1
+## 2 roc_auc  binary         0.534 Preprocessor1_Model1</code></pre>
+</div>
+<div id="final-predictions-1" class="section level3">
+<h3>Final Predictions</h3>
+<pre><code>##           Truth
+## Prediction 0-12 13-30
+##      0-12   106    79
+##      13-30    0     5</code></pre>
+</div>
 </div>
 
 <p>
