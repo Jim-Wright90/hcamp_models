@@ -1,0 +1,573 @@
+---
+title: "Decision Tree"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    highlight: espresso
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+library(here)
+library(janitor)
+library(rio)
+library(colorblindr)
+library(gghighlight)
+library(forcats)
+library(ggrepel)
+library(knitr)
+library(kableExtra)
+library(reactable)
+library(plotly)
+library(glue)
+library(fs)
+library(rstatix)
+library(ggpubr)
+library(writexl) 
+library(remotes)
+library(profvis) 
+library(tidymodels)
+library(tune)
+library(glmnet)
+library(baguette)
+library(parsnip)
+library(doParallel)
+library(vip)
+library(pdp)
+library(patchwork)
+library(ranger)
+library(future)
+library(rio)
+library(bit64)
+library(rpart.plot)
+
+
+theme_set(theme_minimal(15) +
+            theme(legend.position = "bottom",
+                  panel.grid.major.x = element_line(color = "gray60"),
+                  panel.grid.minor.x = element_blank(),
+                  panel.grid.major.y = element_blank())
+          )
+```
+
+```{r global, include=FALSE}
+#all clean sims data
+sims_concussion_data <- read_csv(here("data", "sims_concussion_data.csv"))
+
+sims_concussion_data <- sims_concussion_data %>% 
+  mutate(age = as.factor(age))
+
+simsimp <- read_csv(here("data", "clean_impact_sims_data.csv"))
+
+mod_data <- read_csv(here("data", "clean_impact_sims_data.csv"))
+
+mod_datav2 <- read_csv(here("data", "clean_impact_sims_data.csv"))
+
+str(simsimp)
+
+simsimp <- simsimp %>% 
+  mutate(dataset = as.factor(dataset),
+         school_year = as.factor(school_year),
+         school = as.factor(school),
+         league = as.factor(league),
+         gender = as.factor(gender),
+         age = as.factor(age),
+         sport = as.factor(sport),
+         injury = as.factor(injury)) %>% 
+  mutate_if(is.numeric, round, digits = 3)
+
+mod_data <- mod_data %>% 
+  mutate(dataset = as.factor(dataset),
+         school_year = as.factor(school_year),
+         school = as.factor(school),
+         league = as.factor(league),
+         gender = as.factor(gender),
+         sport = as.factor(sport),
+         injury = as.factor(injury)) %>% 
+  mutate_if(is.numeric, round, digits = 3)
+
+str(mod_data)
+
+mod_datav2 <- mod_datav2 %>% 
+  mutate(dataset = as.factor(dataset),
+         school_year = as.factor(school_year),
+         school = as.factor(school),
+         league = as.factor(league),
+         gender = as.factor(gender),
+         sport = as.factor(sport),
+         injury = as.factor(injury)) %>% 
+  mutate_if(is.numeric, round, digits = 3)
+
+str(mod_datav2)
+```
+
+```{r, include=FALSE}
+# creating new data set for machine learning models
+
+names(simsimp)
+str(simsimp)
+names(mod_data)
+
+mod_data[mod_data$age <= 16, "age_group"] <- "13-16"
+mod_data[mod_data$age >=17, "age_group"] <- "17-18"
+
+names(mod_data)
+
+mod_data %>% 
+  count(age_group)
+
+str(mod_data)
+
+mod_data <- mod_data %>% 
+  mutate(age_group = as.factor(age_group))
+
+str(mod_data)
+
+mod_data[mod_data$dys_btwn_onset_rtp_3 <= 6, "rtl_group"] <- "0-6"
+mod_data[mod_data$dys_btwn_onset_rtp_3 >= 7 & mod_data$dys_btwn_onset_rtp_3 <= 12,
+         "rtl_group"] <- "7-12"
+mod_data[mod_data$dys_btwn_onset_rtp_3 >= 13 & mod_data$dys_btwn_onset_rtp_3 <= 18,
+         "rtl_group"] <- "13-18"
+mod_data[mod_data$dys_btwn_onset_rtp_3 >= 19 & mod_data$dys_btwn_onset_rtp_3 <= 24,
+         "rtl_group"] <- "19-24"
+mod_data[mod_data$dys_btwn_onset_rtp_3 >= 25 & mod_data$dys_btwn_onset_rtp_3 <= 30,
+         "rtl_group"] <- "25-30"
+
+str(mod_data)
+
+mod_data <- mod_data %>% 
+  mutate(rtl_group = as.factor(rtl_group))
+
+mod_data %>% 
+  count(rtl_group)
+
+mod_data_2 <- mod_data
+
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 <= 16,
+           "test_1_pcss_group"] <- "0-16"
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 >= 17 &
+           mod_data_2$total_symptom_score_post_injury_1 <= 32,
+           "test_1_pcss_group"] <- "17-32"
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 >= 33 &
+           mod_data_2$total_symptom_score_post_injury_1 <= 48,
+           "test_1_pcss_group"] <- "33-48"
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 >= 49 &
+           mod_data_2$total_symptom_score_post_injury_1 <= 64,
+           "test_1_pcss_group"] <- "49-64"
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 >= 65 &
+           mod_data_2$total_symptom_score_post_injury_1 <= 80,
+           "test_1_pcss_group"] <- "65-80"
+mod_data_2[mod_data_2$total_symptom_score_post_injury_1 >= 81,
+           "test_1_pcss_group"] <- "81 or higher"
+
+str(mod_data_2)
+
+mod_data_2 <- mod_data_2 %>% 
+  mutate(test_1_pcss_group = as.factor(test_1_pcss_group))
+
+str(mod_data_2)
+
+mod_data_2 %>% 
+  count(test_1_pcss_group)
+
+
+# per Tom's suggestion, divding RTL group into two levels - splitting around 12, which is the mean
+
+
+mod_datav2[mod_datav2$age <= 16, "age_group"] <- "13-16"
+mod_datav2[mod_datav2$age >=17, "age_group"] <- "17-18"
+
+mod_datav2[mod_datav2$dys_btwn_onset_rtp_3 <= 12, "rtl_group"] <- "0-12"
+mod_datav2[mod_datav2$dys_btwn_onset_rtp_3 >= 13, "rtl_group"] <- "13-30"
+
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 <= 16,
+           "test_1_pcss_group"] <- "0-16"
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 >= 17 &
+           mod_datav2$total_symptom_score_post_injury_1 <= 32,
+           "test_1_pcss_group"] <- "17-32"
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 >= 33 &
+           mod_datav2$total_symptom_score_post_injury_1 <= 48,
+           "test_1_pcss_group"] <- "33-48"
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 >= 49 &
+           mod_datav2$total_symptom_score_post_injury_1 <= 64,
+           "test_1_pcss_group"] <- "49-64"
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 >= 65 &
+           mod_datav2$total_symptom_score_post_injury_1 <= 80,
+           "test_1_pcss_group"] <- "65-80"
+mod_datav2[mod_datav2$total_symptom_score_post_injury_1 >= 81,
+           "test_1_pcss_group"] <- "81 or higher"
+
+
+str(mod_datav2)
+
+mod_datav2 <- mod_datav2 %>% 
+  mutate(rtl_group = as.factor(rtl_group),
+         test_1_pcss_group = as.factor(test_1_pcss_group),
+         age_group = as.factor(age_group))
+
+str(mod_datav2)
+
+mod_datav2 %>% 
+  count(rtl_group)
+```
+
+
+```{r split, include=FALSE}
+
+mod_data3 <- mod_data_2 %>% 
+  select(student_id, gender, age_group, test_1_pcss_group, rtl_group)
+
+str(mod_data3)
+
+# data where rtl_group is split into two levels only 
+
+mod_data4 <- mod_datav2 %>% 
+  select(student_id, gender, age_group, test_1_pcss_group, rtl_group)
+
+str(mod_data3)
+str(mod_data4)
+
+# split data 
+set.seed(3)
+data_split <- initial_split(mod_data3, strata = rtl_group)
+
+
+
+set.seed(3)
+train <- training(data_split)
+test <- testing(data_split)
+
+str(train)
+str(test)
+
+set.seed(3)
+data_cv <- vfold_cv(train)
+
+
+# split data - with two leveled RTL group
+set.seed(3)
+data_split2 <- initial_split(mod_data4, strata = rtl_group)
+
+
+
+set.seed(3)
+train2 <- training(data_split2)
+test2 <- testing(data_split2)
+
+str(train2)
+str(test2)
+
+set.seed(3)
+data_cv2 <- vfold_cv(train2)
+
+```
+
+```{r, include=FALSE}
+rec2 <- recipe(rtl_group ~ ., data = train) %>% 
+  update_role(contains("id"), new_role = "id vars") %>% 
+  step_novel(all_predictors()) %>%
+  step_unknown(all_predictors()) %>%
+  step_dummy(all_predictors(), -has_role("id vars")) %>% 
+  step_nzv(all_predictors())
+
+rec3 <- recipe(rtl_group ~ ., data = train2) %>% 
+  update_role(contains("id"), new_role = "id vars") %>% 
+  step_novel(all_predictors()) %>%
+  step_unknown(all_predictors()) %>%
+  step_dummy(all_predictors(), -has_role("id vars")) %>% 
+  step_nzv(all_predictors())
+
+
+prep(rec2)
+baked_train2 <- rec2 %>% prep() %>% bake(train)
+baked_train2
+
+prep(rec3)
+baked_train3 <- rec3 %>% prep() %>% bake(train2)
+baked_train3
+
+```
+
+## Model with Five RTL Group Levels {.tabset .tabset-fade .tabset-pills}
+
+```{r, include=FALSE}
+tune_model <- decision_tree() %>% 
+  set_mode("classification") %>% 
+  set_engine("rpart") %>% 
+  set_args(cost_complexity = tune(), 
+           min_n = tune())
+```
+
+```{r, include=FALSE}
+grd <- grid_regular(cost_complexity(), min_n(), levels = c(10, 5)) 
+grd
+
+metrics_eval <- metric_set(sensitivity,
+                           specificity,
+                           accuracy,
+                           roc_auc,
+                           bal_accuracy)
+```
+
+```{r, include=FALSE}
+tictoc::tic()
+tune_tree <- tune_grid(tune_model, 
+                       rec2, 
+                       data_cv, 
+                       grid = grd,
+                       metrics = metrics_eval)
+tictoc::toc()
+```
+
+### Metrics 
+
+The produced model has very low sensitivity and descent specificity. 
+
+```{r, include=TRUE}
+tune_tree %>% 
+  select(id, .metrics) %>% 
+  unnest(.metrics) %>% 
+  filter(.metric == "sens" | .metric == "spec") %>% 
+  group_by(.metric) %>% 
+  arrange(desc(.estimate)) %>% 
+  slice(1:5)
+```
+
+### ROC Plot
+
+```{r, include=TRUE}
+collect_metrics(tune_tree) %>%  
+  filter(.metric == "roc_auc" & cost_complexity != 0.1) %>% 
+  ggplot(aes(cost_complexity, mean))+
+  geom_jitter(aes(color = factor(min_n)),
+              height = 0, width = 0.01)
+```
+
+### ROC Value
+
+The best ROC value of the model is 0.555, which corresponds to a weak model that cannot classify observations with consistency. 
+
+```{r, include=TRUE}
+tune_tree %>% 	
+    show_best(metric = "roc_auc", n = 5)
+```
+
+### Model Tuning ROC
+
+```{r, include=FALSE}
+grid_min_n <- tibble(min_n = 10:40)
+
+dt_tune2 <- tune_model %>% 
+  set_args(cost_complexity = 0.0000001)
+
+tictoc::tic()
+dt_tune_fit2 <- tune_grid(
+  dt_tune2,
+  preprocessor = rec2,
+  resamples = data_cv,
+  grid = grid_min_n
+)
+tictoc::toc()
+```
+
+```{r, include=FALSE}
+decision_tree_best <- show_best(dt_tune_fit2, metric = "roc_auc", n = 1) 
+```
+
+With adjustments to the model, the ROC remains at 0.555, indicating that the model is accurately classifying with 50% accuracy - not a strong trade-off between true positive rate and false positive rate
+
+```{r, include=TRUE}
+decision_tree_best
+```
+
+```{r, include=FALSE}
+finalized_dt <- select_best(dt_tune_fit2, metric = "roc_auc", n = 1)
+finalized_dt
+
+final_tree <- dt_tune2 %>% 
+  finalize_model(finalized_dt)
+
+test_fit <- last_fit(final_tree, rec2, data_split, metrics = metrics_eval)
+test_fit$.metrics
+```
+
+### Model Metrics on Test Fit
+
+```{r, include=TRUE}
+test_fit$.metrics
+```
+
+```{r, include=FALSE}
+predictions <- test_fit$.predictions[[1]]
+
+counts <- predictions %>% 
+  count(.pred_class, rtl_group) %>% 
+  drop_na() %>% 
+  group_by(rtl_group) %>% 
+  mutate(prop = n/sum(n)) 
+```
+
+### Model Predictions 
+
+```{r, include=TRUE}
+counts
+```
+
+### Predictions Plot
+
+```{r, include=TRUE}
+ggplot(counts, aes(.pred_class, rtl_group)) +
+  geom_tile(aes(fill = prop)) +
+  geom_label(aes(label = round(prop, 2))) +
+  colorspace::scale_fill_continuous_diverging(
+    palette = "Blue-Red2",
+    mid = .25,
+    rev = TRUE)
+```
+
+
+## Model with Five RTL Group Levels {.tabset .tabset-fade .tabset-pills}
+
+```{r, include=FALSE}
+tune_model_v2 <- decision_tree() %>% 
+  set_mode("classification") %>% 
+  set_engine("rpart") %>% 
+  set_args(cost_complexity = tune(),
+           min_n = tune())
+```
+
+```{r, include=FALSE}
+grd2 <- grid_regular(cost_complexity(), min_n(), levels = c(10, 5)) 
+grd2
+
+metrics_eval2 <- metric_set(sensitivity,
+                           specificity,
+                           accuracy,
+                           roc_auc,
+                           bal_accuracy)
+
+```
+
+```{r, include=FALSE}
+tictoc::tic()
+tune_tree_2 <- tune_grid(tune_model_v2, 
+                       rec3, 
+                       data_cv2, 
+                       grid = grd2,
+                       metrics = metrics_eval2)
+tictoc::toc()
+
+```
+
+### Metrics 
+
+The model appears to be very sensitive but specificity is significantly reduced 
+
+```{r, include=TRUE}
+tune_tree_2 %>% 
+  select(id, .metrics) %>% 
+  unnest(.metrics) %>% 
+  filter(.metric == "sens" | .metric == "spec") %>% 
+  group_by(.metric) %>% 
+  arrange(desc(.estimate)) %>% 
+  slice(1:5)
+```
+
+### ROC Plot
+
+```{r, include=TRUE}
+collect_metrics(tune_tree_2) %>%  
+  filter(.metric == "roc_auc" & cost_complexity != 0.1) %>% 
+  ggplot(aes(cost_complexity, mean))+
+  geom_jitter(aes(color = factor(min_n)),
+              height = 0, width = 0.01)
+```
+
+### ROC Value
+
+The best ROC value of the model is 0.54, which corresponds to a weak model that cannot classify observations with consistency. Reducing RTL variable to two groups did not seem to help much.
+
+```{r, include=TRUE}
+tune_tree_2 %>% 	
+    show_best(metric = "roc_auc", n = 5)
+```
+
+### Model Tuning ROC
+
+```{r, include=FALSE}
+grid_min_n2 <- tibble(min_n = 10:40)
+
+dt_tune3 <- tune_model_v2 %>% 
+  set_args(cost_complexity = 0.000000001)
+
+tictoc::tic()
+dt_tune_fit3 <- tune_grid(
+  dt_tune3,
+  preprocessor = rec2,
+  resamples = data_cv,
+  grid = grid_min_n2
+)
+tictoc::toc()
+```
+
+```{r, include=FALSE}
+decision_tree_best2 <- show_best(dt_tune_fit3, metric = "roc_auc", n = 1) 
+```
+
+Similar to the first model attempt, adjustments to the model keep the ROC at 0.555.
+
+```{r, include=TRUE}
+decision_tree_best2
+```
+
+
+```{r, include=FALSE}
+finalized_dt2 <- select_best(dt_tune_fit3, metric = "roc_auc", n = 1)
+finalized_dt2
+
+final_tree2 <- dt_tune3 %>% 
+  finalize_model(finalized_dt2)
+
+test_fit2 <- last_fit(final_tree2, rec3, data_split2, metrics = metrics_eval)
+test_fit2$.metrics
+```
+
+### Model Metrics on Test Fit
+
+```{r, include=TRUE}
+test_fit2$.metrics
+```
+
+```{r, include=FALSE}
+predictions2 <- test_fit2$.predictions[[1]]
+
+counts2 <- predictions2 %>% 
+  count(.pred_class, rtl_group) %>% 
+  drop_na() %>% 
+  group_by(rtl_group) %>% 
+  mutate(prop = n/sum(n)) 
+```
+
+### Model Predictions 
+
+```{r, include=TRUE}
+counts2
+```
+
+### Predictions Plot
+
+```{r, include=TRUE}
+ggplot(counts2, aes(.pred_class, rtl_group)) +
+  geom_tile(aes(fill = prop)) +
+  geom_label(aes(label = round(prop, 2))) +
+  colorspace::scale_fill_continuous_diverging(
+    palette = "Blue-Red2",
+    mid = .25,
+    rev = TRUE)
+```

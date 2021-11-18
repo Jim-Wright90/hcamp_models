@@ -1,0 +1,25 @@
+name: HCAMP Predictive Models
+output_dir: '.'
+navbar:
+  title: HCAMP Predictive Models
+  left:
+  - text: Decision Tree
+    href: decision_tree.html
+  - text: Random Forest
+    href: random_forest.html
+  right:
+  - text: K-Nearest Neighbor
+    href: knn.html
+  - text: Support Vector Machine
+    href: svm.html
+  - icon: fa-github
+    href: https://github.com/Jim-Wright90/hcamp_models.git
+output:
+  html_document:
+    theme: united
+    css: website-custom.css
+    includes:
+      after_body: footer.html
+    lib_dir: site_libs
+    self_contained: no
+
