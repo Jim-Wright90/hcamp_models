@@ -6,8 +6,35 @@ output:
     highlight: espresso
 ---
 
-Description text:
+**_Rationale for Predictive Models_**
+
+A series of linear models were produced to identify the relationship between age, sex, and test 1 PCSS score and the duration of time to complete return-to-learn (RTL). The strongest relative linear model was an additive model that included a sex:age interaction to predict RTL. However, this model only generated and adjusted *R*-squared just above 0.05, indicating that model could only explain 5% of the variance. The scatter plots displayed [here](https://jim-wright90.github.io/hcamp_rtl_paper/#models) further explain why a linear model was not the appropriate analysis for this data as there is not an apparent linear relationship between any of the three predictor variables (age, sex, test 1 PCSS score) and RTL duration. 
+
+To parse through the nosiness in the data, I made the decision to explore potential relationships with a variety of predictive classification models. In a classification model, numeric variables are explored as factored variables; therefore, I developed two different sets of data to classify the `RTL duration time` variable into a factored variable with multiple levels. For both data sets, the mean or standard deviation of `RTL duration time` was used to create multiple levels. The first data set contained five levels divided by the standard deviation:
+  
+  * 0 - 6 days
+  * 7 - 12 days
+  * 13 - 18 days
+  * 19 - 24 days
+  * 25 _ 30 days
+  
+The second data used used a two-level `RTL duration time` with the following levels divided by the mean: 
+  
+  * 0 - 12 days
+  * 13 - 30 days 
+  
+For both data sets, the `age` variable was divided into two levels: 13-16 and 17-18. I divided age this way as the Tamura et al. (2020) paper identified a significant difference in RTP duration time between students younger than 17 years old, where younger students were found to require a longer time to complete the protocol. Additionally, in both data sets, the `Test 1 PCSS Score` variable was divided into six levels by the standard deviation:
+
+  * Total Score: 0 - 16
+  * Total Score: 17 - 32
+  * Total Score: 33 - 48
+  * Total Score: 49 - 64
+  * Total Score: 65 - 80
+  * Total Score: 81 or higher
+  
+  
+To evaluate the efficiency of the decision tree, random forest, and KNN models, the metric Receiver Operating Characteristic (ROC) and Area Under the Curve (AUC) was used. ROC represents a trade-off of model sensitivity and specificity, where an optimal value approaches 1.0. For all models run with our data, the ROC-AUC value ranged from 0.5 - 0.6, indicating all models are ineffective at classifying the data. The strongest relative model was the Random Forest model where RTL data was divided into five levels. The Random Forest model produced an ROC-AUC of 0.599. The SVM did not use ROC-AUC as a metric but generated a prediction accuracy of 58.7% when using the five-leveled RTL data. 
 
 ```{r, include=FALSE}
-# rmarkdown::render_site()
+#rmarkdown::render_site()
 ```
