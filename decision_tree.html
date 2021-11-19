@@ -349,18 +349,18 @@ div.tocify {
 <p>The produced model has very low sensitivity and descent specificity.</p>
 <pre><code>## # A tibble: 10 × 7
 ## # Groups:   .metric [2]
-##    id     cost_complexity min_n .metric .estimator .estimate .config            
-##    &lt;chr&gt;            &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;              
-##  1 Fold07    0.0000000001    30 sens    macro          0.267 Preprocessor1_Mode…
-##  2 Fold07    0.000000001     30 sens    macro          0.267 Preprocessor1_Mode…
-##  3 Fold07    0.00000001      30 sens    macro          0.267 Preprocessor1_Mode…
-##  4 Fold07    0.0000001       30 sens    macro          0.267 Preprocessor1_Mode…
-##  5 Fold07    0.000001        30 sens    macro          0.267 Preprocessor1_Mode…
-##  6 Fold07    0.0000000001     2 spec    macro          0.827 Preprocessor1_Mode…
-##  7 Fold07    0.000000001      2 spec    macro          0.827 Preprocessor1_Mode…
-##  8 Fold07    0.00000001       2 spec    macro          0.827 Preprocessor1_Mode…
-##  9 Fold07    0.0000001        2 spec    macro          0.827 Preprocessor1_Mode…
-## 10 Fold07    0.000001         2 spec    macro          0.827 Preprocessor1_Mode…</code></pre>
+##    id     cost_complexity min_n .metric .estimator .estimate .config              
+##    &lt;chr&gt;            &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                
+##  1 Fold07    0.0000000001    30 sens    macro          0.267 Preprocessor1_Model31
+##  2 Fold07    0.000000001     30 sens    macro          0.267 Preprocessor1_Model32
+##  3 Fold07    0.00000001      30 sens    macro          0.267 Preprocessor1_Model33
+##  4 Fold07    0.0000001       30 sens    macro          0.267 Preprocessor1_Model34
+##  5 Fold07    0.000001        30 sens    macro          0.267 Preprocessor1_Model35
+##  6 Fold07    0.0000000001     2 spec    macro          0.827 Preprocessor1_Model01
+##  7 Fold07    0.000000001      2 spec    macro          0.827 Preprocessor1_Model02
+##  8 Fold07    0.00000001       2 spec    macro          0.827 Preprocessor1_Model03
+##  9 Fold07    0.0000001        2 spec    macro          0.827 Preprocessor1_Model04
+## 10 Fold07    0.000001         2 spec    macro          0.827 Preprocessor1_Model05</code></pre>
 </div>
 <div id="roc-plot" class="section level3">
 <h3>ROC Plot</h3>
@@ -370,13 +370,13 @@ div.tocify {
 <h3>ROC Value</h3>
 <p>The best ROC value of the model is 0.555, which corresponds to a weak model that cannot classify observations with consistency.</p>
 <pre><code>## # A tibble: 5 × 8
-##   cost_complexity min_n .metric .estimator  mean     n std_err .config          
-##             &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;            
-## 1    0.0000000001    11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Mo…
-## 2    0.000000001     11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Mo…
-## 3    0.00000001      11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Mo…
-## 4    0.0000001       11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Mo…
-## 5    0.000001        11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Mo…</code></pre>
+##   cost_complexity min_n .metric .estimator  mean     n std_err .config              
+##             &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                
+## 1    0.0000000001    11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Model11
+## 2    0.000000001     11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Model12
+## 3    0.00000001      11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Model13
+## 4    0.0000001       11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Model14
+## 5    0.000001        11 roc_auc hand_till  0.555    10  0.0154 Preprocessor1_Model15</code></pre>
 </div>
 <div id="model-tuning-roc" class="section level3">
 <h3>Model Tuning ROC</h3>
@@ -427,18 +427,18 @@ div.tocify {
 <p>The model appears to be very sensitive but specificity is significantly reduced</p>
 <pre><code>## # A tibble: 10 × 7
 ## # Groups:   .metric [2]
-##    id     cost_complexity min_n .metric .estimator .estimate .config            
-##    &lt;chr&gt;            &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;              
-##  1 Fold01    0.01             2 sens    binary         1     Preprocessor1_Mode…
-##  2 Fold01    0.1              2 sens    binary         1     Preprocessor1_Mode…
-##  3 Fold01    0.01            11 sens    binary         1     Preprocessor1_Mode…
-##  4 Fold01    0.1             11 sens    binary         1     Preprocessor1_Mode…
-##  5 Fold01    0.01            21 sens    binary         1     Preprocessor1_Mode…
-##  6 Fold09    0.0000000001     2 spec    binary         0.182 Preprocessor1_Mode…
-##  7 Fold09    0.000000001      2 spec    binary         0.182 Preprocessor1_Mode…
-##  8 Fold09    0.00000001       2 spec    binary         0.182 Preprocessor1_Mode…
-##  9 Fold09    0.0000001        2 spec    binary         0.182 Preprocessor1_Mode…
-## 10 Fold09    0.000001         2 spec    binary         0.182 Preprocessor1_Mode…</code></pre>
+##    id     cost_complexity min_n .metric .estimator .estimate .config              
+##    &lt;chr&gt;            &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                
+##  1 Fold01    0.01             2 sens    binary         1     Preprocessor1_Model09
+##  2 Fold01    0.1              2 sens    binary         1     Preprocessor1_Model10
+##  3 Fold01    0.01            11 sens    binary         1     Preprocessor1_Model19
+##  4 Fold01    0.1             11 sens    binary         1     Preprocessor1_Model20
+##  5 Fold01    0.01            21 sens    binary         1     Preprocessor1_Model29
+##  6 Fold09    0.0000000001     2 spec    binary         0.182 Preprocessor1_Model01
+##  7 Fold09    0.000000001      2 spec    binary         0.182 Preprocessor1_Model02
+##  8 Fold09    0.00000001       2 spec    binary         0.182 Preprocessor1_Model03
+##  9 Fold09    0.0000001        2 spec    binary         0.182 Preprocessor1_Model04
+## 10 Fold09    0.000001         2 spec    binary         0.182 Preprocessor1_Model05</code></pre>
 </div>
 <div id="roc-plot-1" class="section level3">
 <h3>ROC Plot</h3>
@@ -448,13 +448,13 @@ div.tocify {
 <h3>ROC Value</h3>
 <p>The best ROC value of the model is 0.54, which corresponds to a weak model that cannot classify observations with consistency. Reducing RTL variable to two groups did not seem to help much.</p>
 <pre><code>## # A tibble: 5 × 8
-##   cost_complexity min_n .metric .estimator  mean     n std_err .config          
-##             &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;            
-## 1    0.01             2 roc_auc binary     0.541    10 0.00738 Preprocessor1_Mo…
-## 2    0.01            11 roc_auc binary     0.541    10 0.00738 Preprocessor1_Mo…
-## 3    0.01            21 roc_auc binary     0.523    10 0.0139  Preprocessor1_Mo…
-## 4    0.0000000001     2 roc_auc binary     0.511    10 0.0151  Preprocessor1_Mo…
-## 5    0.000000001      2 roc_auc binary     0.511    10 0.0151  Preprocessor1_Mo…</code></pre>
+##   cost_complexity min_n .metric .estimator  mean     n std_err .config              
+##             &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                
+## 1    0.01             2 roc_auc binary     0.541    10 0.00738 Preprocessor1_Model09
+## 2    0.01            11 roc_auc binary     0.541    10 0.00738 Preprocessor1_Model19
+## 3    0.01            21 roc_auc binary     0.523    10 0.0139  Preprocessor1_Model29
+## 4    0.0000000001     2 roc_auc binary     0.511    10 0.0151  Preprocessor1_Model01
+## 5    0.000000001      2 roc_auc binary     0.511    10 0.0151  Preprocessor1_Model02</code></pre>
 </div>
 <div id="model-tuning-roc-1" class="section level3">
 <h3>Model Tuning ROC</h3>
