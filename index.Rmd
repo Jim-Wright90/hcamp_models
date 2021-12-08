@@ -16,7 +16,7 @@ To parse through the nosiness in the data, I made the decision to explore potent
   * 7 - 12 days
   * 13 - 18 days
   * 19 - 24 days
-  * 25 _ 30 days
+  * 25 - 30 days
   
 The second data used used a two-level `RTL duration time` with the following levels divided by the mean: 
   
